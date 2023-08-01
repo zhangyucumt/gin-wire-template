@@ -1,0 +1,17 @@
+global:
+  resolve_timeout: 0s
+route:
+  receiver: web
+  group_by:
+    - uuid
+  continue: false
+  routes:
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 10m
+receivers:
+  - name: web
+    webhook_configs:
+      - send_resolved: true
+        url: http://api:8701/api/webhook
+        max_alerts: 0

@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+  frontend:
+    image: "harbor.e2cs.com/{{ cookiecutter.project_name }}/{{ cookiecutter.project_name }}-h5:v1.0.0"
+    restart: always
+    networks:
+      - default
+
+  mysql:
+    image: "harbor.e2cs.com/database/mysql:8.0"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE={{ cookiecutter.project_name }}
+      - TZ=Asia/Shanghai
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - default
+    cap_add:
+      - SYS_NICE  # CAP_SYS_NICE
+  redis:
+    image: "harbor.e2cs.com/database/redis:6"
+    volumes:
+      - redis:/var/lib/redis
+    networks:
+      - default
+
+  api:
+    image: "harbor.e2cs.com/{{ cookiecutter.project_name }}/{{ cookiecutter.project_name }}:v1.0.0"
+    restart: always
+    volumes:
+      - ./app.ini:/app.ini
+    environment:
+      APP_ENV: prd
+      DEBUG: false
+    networks:
+      - default
+    depends_on:
+      - mysql
+      - redis
+
+  nginx:
+    image: "harbor.e2cs.com/public/nginx:1.25"
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    restart: always
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - default
+
+volumes:
+  mysql:
+  redis:
+
+networks:
+  default:
